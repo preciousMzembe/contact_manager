@@ -1,6 +1,7 @@
 package com.example.contact_manager.service.impl;
 
 import com.example.contact_manager.dto.ContactDto;
+import com.example.contact_manager.exceptions.NotFoundException;
 import com.example.contact_manager.models.Contact;
 import com.example.contact_manager.repository.ContactRepository;
 import com.example.contact_manager.service.ContactService;
@@ -22,6 +23,50 @@ public class ContactServiceImpl implements ContactService {
     public List<ContactDto> findContactsByUserId(long userId) {
         List<Contact> contacts = contactRepository.findAllByUserId(userId);
         return contacts.stream().map(contact -> mapToDto(contact)).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ContactDto> searchContact(long userId, String name) {
+        List<Contact> contacts = contactRepository.findAllByUserIdAndName(userId, name);
+        return contacts.stream().map(contact -> mapToDto(contact)).collect(Collectors.toList());
+    }
+
+    @Override
+    public ContactDto createContact(long userId, ContactDto contactDto) {
+        Contact newContact = mapToEntity(contactDto);
+        newContact.setUserId(userId);
+
+        contactRepository.save(newContact);
+
+        return mapToDto(newContact);
+    }
+
+    @Override
+    public ContactDto updateContact(long userId, long contactId, ContactDto contactDto) {
+        Contact contact = contactRepository.findById(contactId).orElseThrow(()->new NotFoundException("contact not found"));
+
+        if(contact.getUserId() != userId){
+            throw new NotFoundException("contact found is not for the current usr");
+        }
+
+        contact.setName(contactDto.getName());
+        contact.setPhone(contactDto.getPhone());
+        contact.setEmail(contactDto.getEmail());
+
+        contactRepository.save(contact);
+
+        return mapToDto(contact);
+    }
+
+    @Override
+    public void deleteContact(long userId, long contactId) {
+        Contact contact = contactRepository.findById(contactId).orElseThrow(()->new NotFoundException("contact not found"));
+
+        if(contact.getUserId() != userId){
+            throw new NotFoundException("contact found is not for the current usr");
+        }
+
+        contactRepository.delete(contact);
     }
 
     private ContactDto mapToDto(Contact contact) {
