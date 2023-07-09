@@ -20,10 +20,10 @@ public class ContactController {
     }
 
     @GetMapping("all")
-    public ResponseEntity<String> getContacts(){
+    public ResponseEntity<List<ContactDto>> getContacts(){
         String username = getUsernameFromSecurity();
         List<ContactDto> contacts = contactService.findContactsByUserId(1);
-        return ResponseEntity.ok("All contacts");
+        return ResponseEntity.ok(contacts);
     }
 
     @GetMapping("search/{name}")
